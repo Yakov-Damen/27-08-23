@@ -1,19 +1,33 @@
 abstract class Person {
     firstName: string
     lastName: string
+    age: number
+    address: string
 
-    constructor(firstName: string, lastName: string) {
+    constructor(firstName: string, lastName: string, age: number, address: string) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.age = age;
+        this.address = address;
     }
 }
 
 class Patient extends Person {
     patientId: number
+    phoneNumber: string
+    emergencyContact: string
+    medicalHistory: Appointment[]
 
-    constructor(patientId: number, firstName: string, lastName: string) {
-        super(firstName, lastName);
+    constructor(patientId: number, firstName: string, lastName: string, age: number, address: string, phoneNumber: string, emergencyContact: string) {
+        super(firstName, lastName, age, address);
         this.patientId = patientId;
+        this.phoneNumber = phoneNumber;
+        this.emergencyContact = emergencyContact;
+        this.medicalHistory = [];
+    }
+
+    addHistory(history: Appointment) {
+        this.medicalHistory.push(history);
     }
 
     patientDetails(): string {
@@ -21,12 +35,25 @@ class Patient extends Person {
     }
 }
 
-class Doctor extends Person {
+abstract class MedicalStaff extends Person {
+    staffId: number;
+    position: number;
+    department: string;
+
+    constructor(staffId: number, firstName: string, lastName: string, age: number, address: string , position: number, department: string) {
+        super(firstName, lastName, age, address);
+        this.staffId = staffId;
+        this.position = position;
+        this.department = department;
+    }
+}
+
+class Doctor extends MedicalStaff {
     doctorId: number
     specialization: string
 
-    constructor(firstName: string, lastName: string, doctorId: number, specialization: string) {
-        super(firstName, lastName);
+    constructor(doctorId: number, firstName: string, lastName: string, age: number, address: string,staffId: number, position: number, department: string, specialization: string) {
+        super(staffId, firstName, lastName, age, address, position, department);
         this.doctorId = doctorId
         this.specialization = specialization;
     }
@@ -47,6 +74,7 @@ class Appointment {
         this.doctor = doctor;
         this.date = date;
         this.time = time;
+        patient.addHistory(this);
     }
 
     appointmentDetails(): string {
@@ -71,27 +99,33 @@ class Hospital {
         this.hospitalName = hospitalName;
     }
 
-    addPatient(id: number, fName: string, lName: string): void {
-        this.patients.push(new Patient(id, fName, lName));
+    addPatient(id: number, fName: string, lName: string, age: number, address: string, phoneNumber: string, emergencyContact: string): void {
+        this.patients.push(new Patient(id, fName, lName, age, address, phoneNumber, emergencyContact));
     }
-    addDoctor(fName: string, lName: string, id: number, specialization: string): void {
-        this.doctors.push(new Doctor(fName, lName, id, specialization));
+
+    addDoctor(id: number,fName: string, lName: string, age: number, address: string, staffId: number, position: number, department: string ,specialization: string): void {
+        this.doctors.push(new Doctor(id, fName, lName, age, address, staffId, position, department, specialization));
     }
+
     addAppointment(patientId: number, doctorId: number, date: string, time: string): void {
         let patient = this.patients.find(p => p.patientId === patientId);
         let doctor = this.doctors.find(d => d.doctorId === doctorId);
         if(patient && doctor) this.appointments.push(new Appointment(patient, doctor, date, time));
         else console.error(`Failed creating appointment: create patient and doctor first`);
     }
+
     showAllAppointments(): string {
         return this.appointments.map(appointment => appointment.appointmentDetails()).join('\n');
     }
+
     showAppointmentsBydoctor(doctorId: number): string {
         return this.appointments.filter(appointment => appointment.doctor.doctorId === doctorId).map(appointment => appointment.appointmentDetails()).join('\n');
     }
+
     showAppointmentsBypatient(patientId: number): string {
         return this.appointments.filter(appointment => appointment.patient.patientId === patientId).map(appointment => appointment.appointmentDetails()).join('\n');
     }
+
     todaysAppointments(): string {
         return this.appointments.filter(appointment => appointment.date === new Date().toDateString()).map(appointment => appointment.appointmentDetails()).join('\n');
     }
@@ -99,17 +133,12 @@ class Hospital {
 
 
 
-let patient1 = new Patient(1, 'John', 'Doe');
-let patient2 = new Patient(2, 'Mick', 'How');
-let doctor1 = new Doctor('Mark', 'Nov', 1, 'Cardiology');
-let doctor2 = new Doctor('Amit', 'Hagever', 2, 'Neurology');
-let appointment1 = new Appointment(patient1, doctor1, new Date().toDateString(), new Date().toLocaleTimeString());
-let appointment2 = new Appointment(patient2, doctor2, new Date().toDateString(), '12:00');
+
 let Shiba = new Hospital('Tel-Hashomer');
-Shiba.addPatient(1, 'John', 'Doe');
-Shiba.addPatient(2, 'Mick', 'How');
-Shiba.addDoctor('Mark', 'Nov', 1, 'Cardiology');
-Shiba.addDoctor('Amit', 'Hagever', 2, 'Neurology');
+Shiba.addPatient(1, 'John', 'Doe', 25, 'New York', '0123456789', 'father');
+Shiba.addPatient(2, 'Mick', 'How', 30, 'istanbul', '0123894589', 'mother');
+Shiba.addDoctor(1, 'Mark', 'Nov', 50, 'Israel',10, 2, 'ER', 'Cardiology');
+Shiba.addDoctor(2, 'Amit', 'Hagever',56 ,'New York', 15, 5, 'Nr', 'Neurology');
 Shiba.addAppointment(1, 2, new Date().toDateString(), new Date().toLocaleTimeString())
 Shiba.addAppointment(2, 1, new Date().toDateString(), '12:00')
 console.log(Shiba.showAllAppointments());
